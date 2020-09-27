@@ -3,6 +3,7 @@ from requests import get
 from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
+
 from requests.api import head
 
 headers = {"Accept-Language" : "en-US, en;q=0.5"} #translate the page into English
@@ -60,8 +61,18 @@ movies = pd.DataFrame({
     'imdb' : imdb_ratings, 
     'metascore' : metascores,
     'votes' : votes,
-    'us_grossMilllions' : us_gross,
+    'us_grossMillions' : us_gross,
 })
 
-print(movies)
-print(movies.dtypes)
+
+movies['year'] = movies['year'].str.extract('(\d+)').astype(int)
+movies['timeMin'] = movies['timeMin'].str.extract('(\d+)').astype(int)
+movies['metascore'] = movies['metascore'].astype(int)
+movies['votes'] = movies['votes'].str.replace(',', '').astype(int)
+
+movies['us_grossMillions'] = movies['us_grossMillions'].map(lambda x: x.lstrip('$').rstrip('M'))
+movies['us_grossMillions'] = pd.to_numeric(movies['us_grossMillions'], errors='coerce')
+# easier way to do this is 
+# movies['us_grossMillions'] = movies['us_grossMillions'].str.extract('(\d+\.\d+)').astype(float)
+
+movies.to_csv('movies.csv')
